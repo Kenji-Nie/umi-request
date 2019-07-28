@@ -1,9 +1,11 @@
 export type ResponseType = 'json' | 'text' | 'blob' | 'arrayBuffer' | 'formData';
+
 export interface ResponseError<D = any> extends Error {
   name: string;
   data: D;
   response: Response;
 }
+
 /**
  * 增加的参数
  * @param {string} requestType post类型, 用来简化写content-Type, 默认json
@@ -31,7 +33,6 @@ export interface RequestOptionsInit extends RequestInit {
   errorHandler?: (error: ResponseError) => void;
   prefix?: string;
   suffix?: string;
-  credentials?: string;
 }
 
 export interface RequestOptionsWithoutResponse extends RequestOptionsInit {
@@ -44,6 +45,7 @@ export interface RequestOptionsWithResponse extends RequestOptionsInit {
 
 export type RequestResponse<T = any> = {
   data: T;
+  responseStatus: string;
   response: Response;
 };
 
@@ -55,24 +57,17 @@ export type RequestInterceptor = (
   options?: RequestOptionsInit;
 };
 
-export interface Context {
-  req: {
-    url: string;
-    options: RequestOptionsInit;
-  };
-  res: any;
-}
-
 // use async ()=> Response equal  ()=> Response
 
 export type ResponseInterceptor = (response: Response, options: RequestOptionsInit) => Response | Promise<Response>;
 
-export type OnionMiddleware = (ctx: Context, next: NextCallback) => void;
-
 export interface RequestMethod<R = false> {
   <T = any>(url: string, options: RequestOptionsWithResponse): Promise<RequestResponse<T>>;
+
   <T = any>(url: string, options: RequestOptionsWithoutResponse): Promise<T>;
+
   <T = any>(url: string, options?: RequestOptionsInit): R extends true ? Promise<RequestResponse<T>> : Promise<T>;
+
   get: RequestMethod<R>;
   post: RequestMethod<R>;
   delete: RequestMethod<R>;
@@ -87,7 +82,6 @@ export interface RequestMethod<R = false> {
       use: (handler: ResponseInterceptor) => void;
     };
   };
-  use: (handler: OnionMiddleware) => void;
 }
 
 export interface ExtendOnlyOptions {
@@ -102,7 +96,9 @@ export type ExtendOptionsWithResponse = RequestOptionsWithResponse & ExtendOnlyO
 
 export interface Extend {
   (options: ExtendOptionsWithoutResponse): RequestMethod<false>;
+
   (options: ExtendOptionsWithResponse): RequestMethod<true>;
+
   (options: ExtendOptionsInit): RequestMethod;
 }
 
